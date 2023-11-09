@@ -1,8 +1,44 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import astronaut from '../assets/astronaut.svg';
 import { MdOutlineMail, MdLockOutline } from 'react-icons/md';
+import { ChangeEvent, useState } from 'react';
+import { getErrorMessage } from '../utils';
+import { useAuthContext } from '../context/AuthContext';
+
+const DEFAULT_INPUTS = {
+  email: '',
+  password: '',
+};
 
 const SignIn = () => {
+  const { signin } = useAuthContext();
+
+  const [err, setErr] = useState('');
+  const [formInput, setFormInput] = useState(DEFAULT_INPUTS);
+
+  const navigate = useNavigate();
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const name = e.target.name;
+
+    setFormInput({ ...formInput, [name]: value });
+  };
+
+  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setErr('');
+
+    try {
+      await signin(formInput);
+
+      navigate('/');
+      setFormInput(DEFAULT_INPUTS);
+    } catch (error) {
+      setErr(getErrorMessage(error));
+    }
+  };
+
   return (
     <div className="sign-in flex h-full">
       <div className="welcome hidden md:flex grow flex-col items-center justify-center bg-primary text-white">
@@ -48,17 +84,22 @@ const SignIn = () => {
           </div>
 
           <form
+            onSubmit={handleSignIn}
             id="sign-in-form"
-            className="grow md:grow-0 my-6 xs:my-8 md:my-10"
+            className="grow md:grow-0 mt-6 xs:mt-8 md:mt-10"
           >
             <div className="flex gap-3 w-full mb-4 px-3 py-2 text-sm font-semibold border border-gray rounded-md">
               <MdOutlineMail className="text-xl text-gray" />
 
               <input
                 type="email"
+                className="w-full outline-none"
                 required
                 placeholder="Enter your email"
-                className="w-full outline-none"
+                name="email"
+                maxLength={40}
+                value={formInput.email}
+                onChange={handleChange}
               />
             </div>
 
@@ -70,9 +111,16 @@ const SignIn = () => {
                 required
                 placeholder="Password"
                 className="w-full outline-none"
+                name="password"
+                value={formInput.password}
+                onChange={handleChange}
               />
             </div>
           </form>
+
+          <p className="h-4 my-3 xs:my-4 md:my-5 text-sm text-red font-semibold">
+            {err && err}
+          </p>
 
           <button
             type="submit"

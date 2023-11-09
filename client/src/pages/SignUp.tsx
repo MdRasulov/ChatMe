@@ -1,9 +1,59 @@
-import astronaut from '../assets/astronaut.svg';
 import { MdOutlineMail, MdLockOutline } from 'react-icons/md';
 import { BiUser } from 'react-icons/bi';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { ChangeEvent, useState } from 'react';
+import { getErrorMessage } from '../utils';
+import astronaut from '../assets/astronaut.svg';
+import axios from 'axios';
+import { useAuthContext } from '../context/AuthContext';
+
+const DEFAULT_INPUTS = {
+  username: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+};
 
 const SignUp = () => {
+  const { signin } = useAuthContext();
+
+  const [err, setErr] = useState('');
+  const [formInput, setFormInput] = useState(DEFAULT_INPUTS);
+
+  const navigate = useNavigate();
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const name = e.target.name;
+
+    setFormInput({ ...formInput, [name]: value });
+  };
+
+  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setErr('');
+
+    try {
+      if (formInput.username.split(' ').join('').length === 0) {
+        throw new Error('Username can not be empty');
+      }
+      if (formInput.password !== formInput.confirmPassword) {
+        throw new Error('Password  mismatch');
+      }
+
+      //sign up
+      await axios.post('http://localhost:8800/api/auth/register', formInput);
+
+      //sign in
+      await signin({ email: formInput.email, password: formInput.password });
+
+      navigate('/');
+      setFormInput(DEFAULT_INPUTS);
+    } catch (error) {
+      setErr(getErrorMessage(error));
+    }
+  };
+
   return (
     <div className="sign-in flex h-full">
       <div className="form-container shrink-0 flex md:items-center justify-center w-full md:w-[25rem] lg:w-[35rem] py-8">
@@ -33,17 +83,23 @@ const SignUp = () => {
           </div>
 
           <form
+            onSubmit={handleSignUp}
             id="sign-in-form"
-            className="grow md:grow-0 flex flex-col gap-4 my-6 xs:my-8 md:my-10"
+            className="grow md:grow-0 flex flex-col gap-4 mt-6 xs:mt-8 md:mt-10"
           >
             <div className="flex gap-3 w-full px-3 py-2 text-sm font-semibold border border-gray rounded-md">
               <BiUser className="text-xl text-gray" />
 
               <input
-                type="text"
-                required
-                placeholder="Username"
                 className="w-full outline-none"
+                type="text"
+                placeholder="Username"
+                name="username"
+                minLength={3}
+                maxLength={25}
+                required
+                value={formInput.username}
+                onChange={handleChange}
               />
             </div>
 
@@ -54,7 +110,11 @@ const SignUp = () => {
                 type="email"
                 required
                 placeholder="Email"
+                maxLength={40}
                 className="w-full outline-none"
+                name="email"
+                value={formInput.email}
+                onChange={handleChange}
               />
             </div>
 
@@ -66,6 +126,10 @@ const SignUp = () => {
                 required
                 placeholder="Password"
                 className="w-full outline-none"
+                name="password"
+                minLength={5}
+                value={formInput.password}
+                onChange={handleChange}
               />
             </div>
 
@@ -77,9 +141,17 @@ const SignUp = () => {
                 required
                 placeholder="Repeat password"
                 className="w-full outline-none"
+                name="confirmPassword"
+                minLength={5}
+                value={formInput.confirmPassword}
+                onChange={handleChange}
               />
             </div>
           </form>
+
+          <p className=" h-4 my-3 xs:my-4 md:my-5 text-sm text-red font-semibold">
+            {err && err}
+          </p>
 
           <button
             type="submit"
@@ -89,7 +161,7 @@ const SignUp = () => {
             Sign up
           </button>
 
-          <div className="mt-4 text-sm ">
+          <div className="mt-4 text-sm">
             Already a member?{' '}
             <Link to={'/login'}>
               <span className="text-primary font-semibold">Log In</span>
