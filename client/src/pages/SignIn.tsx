@@ -1,9 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
-import astronaut from '../assets/astronaut.svg';
 import { MdOutlineMail, MdLockOutline } from 'react-icons/md';
 import { ChangeEvent, useState } from 'react';
 import { getErrorMessage } from '../utils';
 import { useAuthContext } from '../context/AuthContext';
+import astronaut from '../assets/astronaut.svg';
 
 const DEFAULT_INPUTS = {
   email: '',

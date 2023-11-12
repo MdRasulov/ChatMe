@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { db } from '../connect.js';
 
 export const registerController = (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, profile_pic } = req.body;
   const q = 'SELECT * FROM users WHERE email = $1';
 
   if (!email || !password || !username) {
@@ -12,7 +12,7 @@ export const registerController = (req, res) => {
 
   db.query(q, [email], (err, data) => {
     if (err) {
-      return res.status(500).json(err);
+      return res.status(500).json(err.message);
     }
 
     if (data.rows.length) {
@@ -25,10 +25,10 @@ export const registerController = (req, res) => {
 
     //create new user
     const q =
-      'INSERT INTO users (username, email, password) VALUES ($1, $2, $3)';
+      'INSERT INTO users (username, email, password, profile_pic) VALUES ($1, $2, $3, $4)';
 
-    db.query(q, [username, email, encryptedPass], (err, data) => {
-      if (err) return res.status(500).json(err);
+    db.query(q, [username, email, encryptedPass, profile_pic], (err, data) => {
+      if (err) return res.status(500).json(err.message);
 
       return res.status(200).json('User created successfully');
     });
@@ -45,7 +45,7 @@ export const loginController = (req, res) => {
 
   db.query(q, [email], (err, data) => {
     if (err) {
-      return res.status(500).json(err);
+      return res.status(500).json(err.message);
     }
 
     //user is not found
@@ -60,7 +60,7 @@ export const loginController = (req, res) => {
       return res.status(400).json('Wrong password or username');
     }
 
-    const token = jwt.sign({ id: res.id }, 'privateKey');
+    const token = jwt.sign({ id: restData.id }, 'privateKey');
 
     // set token to cookie
     res

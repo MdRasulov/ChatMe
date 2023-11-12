@@ -6,12 +6,12 @@ import {
   PropsWithChildren,
 } from 'react';
 import { LoginInput, User } from '../types';
-import axios from 'axios';
+import { createRequest } from '../api';
 
 type AuthContextType = {
   currentUser: null | User;
   signin: (inputs: LoginInput) => Promise<void>;
-  // setCurrentUser: React.Dispatch<React.SetStateAction<User | null>>;
+  setCurrentUser: React.Dispatch<React.SetStateAction<User | null>>;
 };
 
 const retrieveUser = (): User | null => {
@@ -26,13 +26,7 @@ export const AuthContextProvider = ({ children }: PropsWithChildren<{}>) => {
   const [currentUser, setCurrentUser] = useState<User | null>(retrieveUser);
 
   const signin = async (inputs: LoginInput) => {
-    const res = await axios.post(
-      'http://localhost:8800/api/auth/login',
-      inputs,
-      {
-        withCredentials: true,
-      }
-    );
+    const res = await createRequest.post('auth/login', inputs);
 
     setCurrentUser(res.data);
   };
@@ -42,7 +36,7 @@ export const AuthContextProvider = ({ children }: PropsWithChildren<{}>) => {
   }, [currentUser]);
 
   return (
-    <AuthContext.Provider value={{ currentUser, signin }}>
+    <AuthContext.Provider value={{ currentUser, signin, setCurrentUser }}>
       {children}
     </AuthContext.Provider>
   );

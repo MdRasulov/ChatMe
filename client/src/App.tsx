@@ -5,12 +5,14 @@ import Home from './pages/home';
 import Chat from './pages/chat';
 import { MainLayout } from './layout/MainLayout';
 import Profile from './pages/profile';
+import { useAuthContext } from './context/AuthContext';
+import { NotFound } from './pages/NotFound';
 
 const App = () => {
-  const loggedIn = true;
+  const { currentUser } = useAuthContext();
 
   const RequireAuth = ({ children }: any) => {
-    return loggedIn ? children : <Navigate to="/login" />;
+    return currentUser ? children : <Navigate to="/login" />;
   };
 
   return (
@@ -27,7 +29,11 @@ const App = () => {
           }
         >
           <Route index element={<Home />} />
-          <Route path="profile" element={<Profile />} />
+          <Route
+            path="profile"
+            element={<Navigate to={`/profile/${currentUser?.id}`} />}
+          />
+          <Route path="profile/:userId" element={<Profile />} />
         </Route>
         <Route
           path="chat"
@@ -37,6 +43,7 @@ const App = () => {
             </RequireAuth>
           }
         />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
   );

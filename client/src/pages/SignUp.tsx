@@ -2,10 +2,12 @@ import { MdOutlineMail, MdLockOutline } from 'react-icons/md';
 import { BiUser } from 'react-icons/bi';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChangeEvent, useState } from 'react';
-import { getErrorMessage } from '../utils';
+import { getErrorMessage, uploadImg } from '../utils';
 import astronaut from '../assets/astronaut.svg';
-import axios from 'axios';
 import { useAuthContext } from '../context/AuthContext';
+import { createRequest } from '../api';
+import { FaImages } from 'react-icons/fa';
+import { FiCheckSquare } from 'react-icons/fi';
 
 const DEFAULT_INPUTS = {
   username: '',
@@ -15,12 +17,12 @@ const DEFAULT_INPUTS = {
 };
 
 const SignUp = () => {
+  const navigate = useNavigate();
   const { signin } = useAuthContext();
 
   const [err, setErr] = useState('');
   const [formInput, setFormInput] = useState(DEFAULT_INPUTS);
-
-  const navigate = useNavigate();
+  const [userImg, setUserImg] = useState<File | undefined>(undefined);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -41,8 +43,16 @@ const SignUp = () => {
         throw new Error('Password  mismatch');
       }
 
+      //upload user image and get link
+      let userImageLink = userImg
+        ? await uploadImg(userImg)
+        : 'default-image.jpg';
+
       //sign up
-      await axios.post('http://localhost:8800/api/auth/register', formInput);
+      await createRequest.post('auth/register', {
+        ...formInput,
+        profile_pic: userImageLink,
+      });
 
       //sign in
       await signin({ email: formInput.email, password: formInput.password });
@@ -85,7 +95,7 @@ const SignUp = () => {
           <form
             onSubmit={handleSignUp}
             id="sign-in-form"
-            className="grow md:grow-0 flex flex-col gap-4 mt-6 xs:mt-8 md:mt-10"
+            className="flex flex-col gap-4 mt-6 xs:mt-8 md:mt-10"
           >
             <div className="flex gap-3 w-full px-3 py-2 text-sm font-semibold border border-gray rounded-md">
               <BiUser className="text-xl text-gray" />
@@ -149,9 +159,30 @@ const SignUp = () => {
             </div>
           </form>
 
-          <p className=" h-4 my-3 xs:my-4 md:my-5 text-sm text-red font-semibold">
-            {err && err}
-          </p>
+          <div className="grow md:grow-0 my-4">
+            <input
+              type="file"
+              id="post-image"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => setUserImg(e?.target?.files?.[0])}
+            />
+            <label
+              htmlFor="post-image"
+              className={`${
+                userImg ? 'text-black' : 'text-gray'
+              } flex items-center gap-2 w-fit text-sm font-semibold cursor-pointer`}
+            >
+              <div className="shrink-0 flex items-center justify-center h-full px-6 py-2 text-xl text-white bg-primary hover:bg-primaryDark rounded-lg outline-none transition-colors">
+                {userImg ? <FiCheckSquare /> : <FaImages />}
+              </div>
+              {userImg ? 'Image selected' : 'Select image'}
+            </label>
+
+            <p className="h-4 mt-4 text-sm text-red font-semibold">
+              {err && err}
+            </p>
+          </div>
 
           <button
             type="submit"

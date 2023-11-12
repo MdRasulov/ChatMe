@@ -1,3 +1,4 @@
+import ReactDom from 'react-dom';
 import { useEffect } from 'react';
 
 export const Modal = ({
@@ -18,15 +19,16 @@ export const Modal = ({
       body && (body.style.overflow = 'auto');
     }
   }, [open]);
-  return (
-    //backdrop
+
+  return ReactDom.createPortal(
     <div
       onClick={onClose}
       className={`${
         open ? 'visible bg-black/40' : 'invisible'
-      } fixed flex items-center justify-center inset-0  z-50 overflow-hidden transition-colors`}
+      } fixed inset-0 flex items-center justify-center overflow-hidden transition-colors z-[100]`}
     >
       {children}
-    </div>
+    </div>,
+    document.getElementById('portal') as HTMLElement
   );
 };
